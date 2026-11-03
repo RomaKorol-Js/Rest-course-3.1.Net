@@ -1,82 +1,80 @@
 using Api.Dtos;
-using Application.Cards.Services.Abstract;
+using Api.Modules.Errors;
+using Application.Common.Interfaces.Queries;
+using Application.Cards.Commands;
+using MediatR;
+using Domain.Cards;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Api.Controllers;
 
 [Route("cards")]
 [ApiController]
-public class CardController(ICardService cardService) : ControllerBase
+public class CardsController(ISender sender, ICardQueries cardQueries) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetCards(CancellationToken cancellationToken)
+    public async Task<ActionResult<IReadOnlyList<CardDto>>> GetCards(CancellationToken cancellationToken)
     {
-        var cards = await cardService.GetCards(cancellationToken);
-
-        var dtos = cards.Select(card => CardDto.FromDomainModel(card));
-        return Ok(dtos);
+        var cards = await cardQueries.GetAll(cancellationToken);
+        return cards.Select(CardDto.FromDomainModel).ToList();
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetCard(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<CardDto>> GetCard(Guid id, CancellationToken cancellationToken)
     {
-        var card = await cardService.GetCard(id, cancellationToken);
-        if (card is null)
-        {
-            return NotFound();
-        }
+        var cardOption = await cardQueries.GetById(new CardId(id), cancellationToken);
 
-        return Ok(CardDto.FromDomainModel(card));
+        return cardOption.Match<ActionResult<CardDto>>(
+            c => CardDto.FromDomainModel(c!),
+            () => NotFound()
+        );
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateCard([FromBody] CreateCardDto request, CancellationToken cancellationToken)
+    public async Task<ActionResult<CardDto>> CreateCard([FromBody] CreateCardDto request, CancellationToken cancellationToken)
     {
-        try
+        var input = new CreateCardCommand
         {
-            var card = await cardService.Add(request.Name, request.Description, request.Cost, request.Attack, request.Health, cancellationToken);
-            var dto = CardDto.FromDomainModel(card);
+            Name = request.Name,
+            Description = request.Description,
+            Attack = request.Attack,
+            Cost = request.Cost,
+            Health = request.Health
+        };
 
-            return CreatedAtAction(nameof(GetCard), new { id = dto.Id }, dto);
-        }
-        catch (ArgumentException exception)
-        {
-            return Conflict(exception.Message);
-        }
+        var result = await sender.Send(input, cancellationToken);
+
+        return result.Match<ActionResult<CardDto>>(
+            p => CreatedAtAction(nameof(GetCard), new { id = p.Id.Value }, CardDto.FromDomainModel(p)),
+            e => e.ToObjectResult()
+        );
     }
 
     [HttpPut("{id:guid}")]
-    public async Task<IActionResult> UpdateCard(Guid id, [FromBody] UpdateCardDto request, CancellationToken cancellationToken)
+    public async Task<ActionResult<CardDto>> UpdateCard(Guid id, [FromBody] UpdateCardDto request, CancellationToken cancellationToken)
     {
-        try
+        var input = new UpdateCardCommand
         {
-            var card = await cardService.Update(id, request.Name, request.Description, request.Cost, request.Attack, request.Health, cancellationToken);
-            if (card is null)
-            {
-                return NotFound();
-            }
+            Id = new CardId(id),
+            Name = request.Name,
+            Description = request.Description,
+            Attack = request.Attack,
+            Cost = request.Cost,
+            Health = request.Health
+        };
 
-            return Ok(CardDto.FromDomainModel(card));
-        }
-        catch (ArgumentException exception)
-        {
-            return Conflict(exception.Message);
-        }
+        var result = await sender.Send(input, cancellationToken);
+
+        return result.Match<ActionResult<CardDto>>(p => Ok(CardDto.FromDomainModel(p)),e => e.ToObjectResult());
     }
 
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> DeleteCard(Guid id, CancellationToken cancellationToken)
     {
-        var success = await cardService.Delete(id, cancellationToken);
-        if (!success)
-        {
-            return NotFound();
-        }
+        var input = new DeleteCardCommand { Id = id };
 
-        return NoContent();
+        var result = await sender.Send(input, cancellationToken);
+
+        return result.Match<IActionResult>(p => NoContent(),e => e.ToObjectResult());
     }
 }

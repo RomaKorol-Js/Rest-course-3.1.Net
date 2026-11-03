@@ -1,13 +1,22 @@
-using Application.Cards.Services.Abstract;
-using Application.Cards.Services.Implementation;
+//using Application.Cards.Services.Abstract;
+//using Application.Cards.Services.Implementation;
+using System.Reflection;
+using Application.Common.Behaviours;
+using FluentValidation;
+using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 
 
 namespace Application;
+
 public static class ConfigureApplicationServices
 {
- public static void AddApplicationServices(this IServiceCollection services)
- {
- services.AddScoped<ICardService, CardService>();
- }
+    public static void AddApplicationServices(this IServiceCollection services)
+    {
+        services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddMediatR(configuration =>
+        configuration.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+        services.AddTransient(typeof(IPipelineBehavior<,>),
+        typeof(ValidationBehaviour<,>));
+    }
 }

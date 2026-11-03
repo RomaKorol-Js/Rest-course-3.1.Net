@@ -1,4 +1,5 @@
-using Application.Common.Interfaces;
+using Application.Common.Interfaces.Repositories;
+using Application.Common.Interfaces.Queries;
 using Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -29,5 +30,6 @@ public static class ConfigurePersistenceServices
         services.AddScoped<CardRepository>();
 
         services.AddScoped<ICardRepository>(provider => provider.GetRequiredService<CardRepository>());
+        services.AddScoped<ICardQueries>(provider => provider.GetRequiredService<CardRepository>());
     }
 }

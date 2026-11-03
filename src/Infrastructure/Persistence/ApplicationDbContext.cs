@@ -1,5 +1,5 @@
 using System.Reflection;
-using Domain.Card;
+using Domain.Cards;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence;

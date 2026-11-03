@@ -1,15 +1,16 @@
-using Domain.Card;
+using Domain.Cards;
 using Infrastructure.Persistence.Converters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Infrastructure.Persistence.Configurations; // Виправлено namespace
+namespace Infrastructure.Persistence.Configurations;
 
 public class CardsConfiguration : IEntityTypeConfiguration<Card>
 {
     public void Configure(EntityTypeBuilder<Card> builder)
     {
         builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).HasConversion(x => x.Value, x => new CardId(x));
 
         builder.Property(x => x.Name).HasColumnType("varchar(255)").IsRequired();
         builder.HasIndex(x => x.Name).IsUnique();

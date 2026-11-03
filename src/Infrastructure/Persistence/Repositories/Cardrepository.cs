@@ -1,66 +1,25 @@
-//using Application.Common.Interfaces;
-//using Domain.Card;
-//namespace Infrastructure.Persistence.Repositories;
-
-//public class Cardrepository : ICardRepository
-//{
-//    private readonly List<Card> _cards = [];
-
-//    public Task<IReadOnlyList<Card>> GetAll(CancellationToken cancellationToken)
-//    {
-//        return Task.FromResult<IReadOnlyList<Card>>(_cards.ToList());
-//    }
-//    public Task<Card?> GetById(Guid id, CancellationToken cancellationToken)
-//    {
-//        return Task.FromResult(_cards.FirstOrDefault(x => x.Id == id));
-//    }
-//    public Task<Card> Add(Card card, CancellationToken cancellationToken)
-//    {
-//        _cards.Add(card);
-//        return Task.FromResult(card);
-//    }
-//    public Task<Card?> GetByName(string Name, CancellationToken cancellationToken)
-//    {
-//        return Task.FromResult(_cards.FirstOrDefault(x => x.Name == Name));
-//    }
-//    public Task<Card> Update(Card card, CancellationToken cancellationToken)
-//    {
-//        var cardToUpdate = _cards.FirstOrDefault(x => x.Id == card.Id);
-
-//        _cards[_cards.IndexOf(cardToUpdate)] = card;// ????????????????????????
-
-//        return Task.FromResult(card);
-//    }
-//    //Task Delete(Card card, CancellationToken cancellationToken);
-
-//    public Task Delete(Card card, CancellationToken cancellationToken) {
-//    _cards.Remove(card);
-
-//        return Task.FromResult(card);
-//    }
-
-//}
-
-using Application.Common.Interfaces;
-using Domain.Card;
+using Application.Common.Interfaces.Queries;
+using Application.Common.Interfaces.Repositories;
+using Domain.Cards;
 using Microsoft.EntityFrameworkCore;
-using Infrastructure.Persistence;
+using LanguageExt;
 
 namespace Infrastructure.Persistence.Repositories;
 
 public class CardRepository(ApplicationDbContext context) :
-ICardRepository
+ICardRepository, ICardQueries
 {
     public async Task<IReadOnlyList<Card>> GetAll(CancellationToken
    cancellationToken)
     {
         return await context.Cards.ToListAsync(cancellationToken);
     }
-    public async Task<Card?> GetById(Guid id, CancellationToken
+    public async Task<Option<Card?>> GetById(CardId id, CancellationToken
    cancellationToken)
     {
-        return await context.Cards.FirstOrDefaultAsync(x => x.Id == id,
-       cancellationToken);
+        var entity = await context.Cards.FirstOrDefaultAsync(x => x.Id == id,
+cancellationToken);
+        return entity ?? Option<Card>.None;
     }
     public async Task<Card> Add(Card card, CancellationToken
    cancellationToken)
@@ -70,10 +29,10 @@ ICardRepository
         return card;
     }
 
-    public async Task<Card?> GetByName(string Name, CancellationToken cancellationToken)
+    public async Task<Option<Card?>> GetByName(string Name, CancellationToken cancellationToken)
     {
-        return await context.Cards.FirstOrDefaultAsync(x => x.Name == Name,
-cancellationToken);
+        var entity = await context.Cards.FirstOrDefaultAsync(x => x.Name == Name, cancellationToken);
+        return entity ?? Option<Card>.None;
     }
     public async Task<Card> Update(Card card, CancellationToken cancellationToken)
     {
@@ -90,8 +49,8 @@ cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
     }
 
-    // GetByTitle, Update, Delete: реалізуйте самостійно
-    // Підказка: context.Cards.Update(...), context.Cards.Remove(...),
+    // GetByTitle, Update, Delete: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
+    // ПіпїЅпїЅпїЅпїЅпїЅпїЅ: context.Cards.Update(...), context.Cards.Remove(...),
     //context.SaveChangesAsync(...)
 }
 //Application.Common.Interfaces Domain.Cards Microsoft.EntityFrameworkCore I
