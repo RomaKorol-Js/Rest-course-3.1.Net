@@ -17,5 +17,5 @@ public static class CardErrorFactory
                 _ => throw new NotImplementedException("Card error handler is not implemented")
             }
         };
-    }d
+    }
 }

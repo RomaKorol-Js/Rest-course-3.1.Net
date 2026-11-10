@@ -55,6 +55,7 @@ public class CardsController(ISender sender, ICardQueries cardQueries) : Control
     {
         var input = new UpdateCardCommand
         {
+            Id = new CardId(id),
             Name = request.Name,
             Description = request.Description,
             Attack = request.Attack,

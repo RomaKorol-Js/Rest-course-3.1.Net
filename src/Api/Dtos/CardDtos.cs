@@ -10,4 +10,4 @@ public record CardDto(
 }
 public record CreateCardDto(string Name,string Description,int Attack,int Health,int Cost);
 
-public record UpdateCardDto(Guid Id,string Name,string Description,int Attack,int Health,int Cost);
+public record UpdateCardDto(string Name,string Description,int Attack,int Health,int Cost);

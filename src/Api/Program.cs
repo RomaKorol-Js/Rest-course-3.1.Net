@@ -2,6 +2,7 @@ using Api.Modules;
 using Infrastructure;
 using Application;
 
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.SetupServices();
 builder.Services.AddApplicationServices();
@@ -20,3 +21,5 @@ await app.InitialiseDatabaseAsync();
 app.UseCors();
 app.MapControllers();
 app.Run();
+
+public partial class Program { }
